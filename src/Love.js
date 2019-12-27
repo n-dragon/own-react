@@ -1,3 +1,11 @@
+
+/**
+ * creating js object corresponding to jsx
+ * (is not fiber)
+ * @param {*} type 
+ * @param {*} props 
+ * @param  {...any} children 
+ */
 export function createElement(type, props, ...children) {
   if (
     Array.isArray(children) &&
@@ -29,8 +37,9 @@ function commitRoot() {
   wipRoot = null;
 }
 /**
- * commit work to the dom.
+ * commit work to the dom according to the fiber effect
  * 
+ * DFS for commiting work
  * @param {*} fiber 
  */
 function commitWork(fiber) {
@@ -155,7 +164,7 @@ function workLoop(timeRemaining) {
  * @param {*} container 
  */
 export function render(element, container) {
-  console.log("render ");
+  // creating first fiber
   wipRoot = {
     dom: container,
     props: {
@@ -195,13 +204,14 @@ export const Love = {
 };
 
 /**
- * reconcile 
+ * reconcile children fibers
  * @param {*} wipFiber 
- * @param {*} elements 
+ * @param {*} elements : children fiber
  */
 function reconcileChildren(wipFiber, elements) {
   // reconcile old wipFilber with children
   let index = 0
+  // we get the old fiber from the current one since there is a link
   let oldFiber =
     wipFiber.alternate && wipFiber.alternate.child
   let prevSibling = null
@@ -221,7 +231,6 @@ function reconcileChildren(wipFiber, elements) {
 
     // same type we will just update the node with the props
     if (sameType) {
-      // TODO update the node
       newFiber = {
         type: oldFiber.type,
         props: element.props,
@@ -231,7 +240,7 @@ function reconcileChildren(wipFiber, elements) {
         effectTag: "UPDATE",
       }
     }
-    // if new element and not same type, we create node  
+    // if new element and not same type, we create fiber  
     if (element && !sameType) {
       newFiber = {
         type: element.type,
@@ -265,16 +274,24 @@ function reconcileChildren(wipFiber, elements) {
 
 }
 /**  
- * create dom and compute next element to render
+ * 
+ * create dom
+ * create children fibers and comparing them with the old ones
+ * return next fiber to work on
  */
 function performUnitOfWork(fiber) {
   if (!fiber.dom) {
+    // create dom related to this fiber
     fiber.dom = createDom(fiber);
   }
-  // getting next element
+  // getting curren fiber children fibers
   const elements = fiber.props.children;
-  // create new children fibers with effect tag
+  // create new children fibers with effect tag and good props
+  // will add fiber node to delete
   reconcileChildren(fiber, elements);
+
+  // we return the first child 
+  // and then if no child siblings
   if (fiber.child) {
     return fiber.child;
   }
