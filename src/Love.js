@@ -46,7 +46,16 @@ function commitWork(fiber) {
   if (!fiber) {
     return;
   }
-  const domParent = fiber.parent.dom;
+
+  // looking for a parent with a dom property not null
+  let domParentFiber = fiber.parent
+  while (!domParentFiber.dom) {
+    domParentFiber = domParentFiber.parent
+  }
+  const domParent = domParentFiber.dom;
+
+  // const domParent = fiber.parent.dom;
+
   if (fiber.effectTag === "PLACEMENT" && fiber.dom != null) {
     domParent.appendChild(fiber.dom);
     // why fiber.dom be null here ?
@@ -58,11 +67,22 @@ function commitWork(fiber) {
     );
 
   } else if (fiber.effectTag === "DELETION") {
-    domParent.removeChild(fiber.dom);
+    commitDeletion(fiber, domParent);
+    // domParent.removeChild(fiber.dom);
+
   }
-  domParent.appendChild(fiber.dom);
+  // no more append since the fiber may not be related to a dom (function fiber)
+  // domParent.appendChild(fiber.dom);
   commitWork(fiber.child);
   commitWork(fiber.sibling);
+}
+
+function commitDeletion(fiber, domParent) {
+  if (fiber.dom) {
+    domParent.removeChild(fiber.dom);
+  } else {
+    commitDeletion(fiber.child, domParent);
+  }
 }
 const isEvent = key => key.startsWith("on")
 const isProperty = key =>
@@ -204,7 +224,8 @@ export const Love = {
 };
 
 /**
- * reconcile children fibers
+ * reconcile children element with fiber.
+ * create them on first call
  * @param {*} wipFiber 
  * @param {*} elements : children fiber
  */
@@ -273,6 +294,22 @@ function reconcileChildren(wipFiber, elements) {
   }
 
 }
+function updateHostComponent(fiber) {
+  if (!fiber.dom) {
+    // create dom related to this fiber
+    fiber.dom = createDom(fiber);
+  }
+  // getting curren fiber children elements
+  const elements = fiber.props.children;
+  // create new children fibers with effect tag and good props
+  // will add fiber node to delete
+  reconcileChildren(fiber, elements);
+}
+
+function updateFunctionComponent(fiber) {
+  const children = [fiber.type(fiber.props)];
+  reconcileChildren(fiber, children);
+}
 /**  
  * 
  * create dom
@@ -280,15 +317,13 @@ function reconcileChildren(wipFiber, elements) {
  * return next fiber to work on
  */
 function performUnitOfWork(fiber) {
-  if (!fiber.dom) {
-    // create dom related to this fiber
-    fiber.dom = createDom(fiber);
+  const isFunctionComponent =
+    fiber.type instanceof Function
+  if (isFunctionComponent) {
+    updateFunctionComponent(fiber)
+  } else {
+    updateHostComponent(fiber)
   }
-  // getting curren fiber children fibers
-  const elements = fiber.props.children;
-  // create new children fibers with effect tag and good props
-  // will add fiber node to delete
-  reconcileChildren(fiber, elements);
 
   // we return the first child 
   // and then if no child siblings

@@ -13,4 +13,16 @@ const a = (
     ))}
   </div>
 );
-Love.render(a, document.getElementById("root"));
+
+const FunctionComponent = props => {
+  return <div>function Component</div>;
+
+};
+const c = <div>
+
+  <FunctionComponent />
+
+</div>;
+
+
+Love.render(c, document.getElementById("root"));
