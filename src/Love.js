@@ -232,20 +232,14 @@ export function render(element, container) {
  * passing props to the dom node 
  * @param {*} element 
  */
-export function createDom(element) {
+export function createDom(fiber) {
   // creating good type dom node
   const dom =
-    element.type == "TEXT_ELEMENT"
+    fiber.type == "TEXT_ELEMENT"
       ? document.createTextNode("")
-      : document.createElement(element.type);
-  const isProperty = key => key !== "children";
-  // passing properties through
-  Object.keys(element.props)
-    .filter(isProperty)
-    .forEach(name => {
-      dom[name] = element.props[name];
-    });
-
+      : document.createElement(fiber.type);
+      // we need to update dom so that we can attach properties
+  updateDom(dom, {}, fiber.props);
   return dom;
 }
 

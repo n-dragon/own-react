@@ -7,9 +7,8 @@ function Counter() {
   return (
 
     /** @jsx Love.createElement */
-    <h1 style="user-select: none" onClick={() => { console.log("cb") }}>
+    <h1 style="user-select: none" onClick={() => { setState(c => c + 1) }}>
       Count: {state}
-      <button onclick={() => { console.log("cb"); setState(c => c + 1) }}>a</button>
     </h1>
   )
 }
