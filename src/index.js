@@ -1,28 +1,21 @@
-import React from "react";
 import * as Love from "./Love";
 
-const b = [];
-for (let i = 0; i < 1000; i++) {
-  b.push(Math.random());
+
+function Counter() {
+  console.log("render counter");
+  const [state, setState] = Love.useState(1);
+  return (
+
+    /** @jsx Love.createElement */
+    <h1 style="user-select: none" onClick={() => { console.log("cb") }}>
+      Count: {state}
+      <button onclick={() => { console.log("cb"); setState(c => c + 1) }}>a</button>
+    </h1>
+  )
 }
+
 /** @jsx Love.createElement */
-const a = (
-  <div>
-    {b.map(val => (
-      <p>{val}</p>
-    ))}
-  </div>
-);
-
-const FunctionComponent = props => {
-  return <div>function Component</div>;
-
-};
-const c = <div>
-
-  <FunctionComponent />
-
-</div>;
+const element = <Counter />;
 
 
-Love.render(c, document.getElementById("root"));
+Love.render(element, document.getElementById("root"));
